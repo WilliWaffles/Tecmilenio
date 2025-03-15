@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Tareas</title>
+    <style>
+        table {
+            border: 2px solid black;
+            border-collapse: collapse;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 3px solid blanchedalmond;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body onload="cargarBienvenida()">
+    <h1 id="welcomeMessage">Bienvenido</h1>
+    <hr>
+
+    <h2>Registrar Nueva Tarea</h2>
+    <form id="tareaForm">
+        <input id="codigoInput" type="number" placeholder="Num. de Codigo"><br>
+        <input id="tituloInput" placeholder="Titulo"><br>
+        <input id="descripcionInput" placeholder="Descripcion"><br>
+        <input id="fechaInput" type="date"><br>
+        <input id="clienteInput" placeholder="Cliente"><br>
+        <input id="idInput" placeholder="ID del Proyecto"><br>
+        <textarea id="comentariosInput" placeholder="Comentarios" rows="4" cols="30"></textarea><br><br>
+        <button type="button" onclick="agregarTarea()">Añadir Tarea</button>
+        <br><br>
+        <hr>
+    </form>
+
+    <h2>Lista de Tareas</h2>
+    <label for="filtroEstatus">Filtrar por estatus:</label>
+    <select id="filtroEstatus" onchange="filtrarTareas()">
+        <option value="Todos">Todos</option>
+        <option value="En espera">En espera</option>
+        <option value="En progreso">En progreso</option>
+        <option value="Rechazado">Rechazado</option>
+        <option value="Cancelado">Cancelado</option>
+        <option value="Cerrado">Cerrado</option>
+        <option value="En pruebas de calidad">En pruebas de calidad</option>
+        <option value="En validación por el usuario">En validación por el usuario</option>
+        <option value="En proceso de liberación">En proceso de liberación</option>
+    </select>
+
+    <table id="tablaTareas">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>ID Proyecto</th>
+                <th>Comentarios</th>
+                <th>Estatus</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Aquí se agregarán las tareas -->
+        </tbody>
+    </table>
+
+    <h2>Consulta y Edición</h2>
+    <form id="consultaForm">
+        <input id="consultaCodigo" type="number" disabled><br>
+        <input id="consultaTitulo" disabled><br>
+        <textarea id="consultaDescripcion" disabled></textarea><br>
+        <input id="consultaFecha" type="date" disabled><br>
+        <input id="consultaCliente" disabled><br>
+        <input id="consultaID" disabled><br>
+        <textarea id="consultaComentarios" placeholder="Añadir Comentario"></textarea><br>
+
+        <label for="consultaEstatus">Estatus:</label>
+        <select id="consultaEstatus">
+            <option value="En progreso">En progreso</option>
+            <option value="Rechazado">Rechazado</option>
+            <option value="Cancelado">Cancelado</option>
+            <option value="Cerrado">Cerrado</option>
+            <option value="En pruebas de calidad">En pruebas de calidad</option>
+            <option value="En validación por el usuario">En validación por el usuario</option>
+            <option value="En proceso de liberación">En proceso de liberación</option>
+        </select>
+
+        <button type="button" onclick="actualizarTarea()">Actualizar Tarea</button>
+    </form>
+
+    <script>
+        let tareaSeleccionada = null;
+
+        function cargarBienvenida() {
+            let usuario = sessionStorage.getItem("usuario") || "Invitado";
+            document.getElementById("welcomeMessage").textContent = "Bienvenido, " + usuario + "!";
+        }
+
+        function agregarTarea() {
+            try {
+                let datos = ["codigoInput", "tituloInput", "descripcionInput", "fechaInput", "clienteInput", "idInput"].map(id => document.getElementById(id).value);
+
+                if (datos.some(dato => !dato.trim())) {
+                    throw new Error("Todos los campos son obligatorios.");
+                }
+
+                let comentarios = document.getElementById("comentariosInput").value || "";
+                let estatus = "En espera";
+                let tbody = document.getElementById("tablaTareas").querySelector("tbody");
+                let fila = tbody.insertRow();
+                fila.dataset.estatus = estatus;
+
+                datos.forEach(dato => {
+                    let celda = fila.insertCell();
+                    celda.textContent = dato;
+                });
+
+                let celdaComentarios = fila.insertCell();
+                celdaComentarios.textContent = comentarios;
+
+                let celdaEstatus = fila.insertCell();
+                celdaEstatus.textContent = estatus;
+
+                fila.addEventListener("dblclick", () => seleccionarTarea(fila));
+
+                document.getElementById("tareaForm").reset();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function seleccionarTarea(fila) {
+            tareaSeleccionada = fila;
+            let celdas = fila.cells;
+            ["consultaCodigo", "consultaTitulo", "consultaDescripcion", "consultaFecha", "consultaCliente", "consultaID"].forEach((id, i) => {
+                document.getElementById(id).value = celdas[i].textContent;
+            });
+            document.getElementById("consultaComentarios").value = "";
+            document.getElementById("consultaEstatus").value = fila.dataset.estatus;
+        }
+
+        function actualizarTarea() {
+            if (!tareaSeleccionada) {
+                alert("Seleccione una tarea para actualizar.");
+                return;
+            }
+
+            let nuevoComentario = document.getElementById("consultaComentarios").value.trim();
+            if (nuevoComentario) {
+                let fecha = new Date().toLocaleString();
+                tareaSeleccionada.cells[6].textContent += `\n[${fecha}] ${nuevoComentario}`;
+            }
+
+            let nuevoEstatus = document.getElementById("consultaEstatus").value;
+            tareaSeleccionada.cells[7].textContent = nuevoEstatus;
+            tareaSeleccionada.dataset.estatus = nuevoEstatus;
+        }
+
+        function filtrarTareas() {
+            let filtro = document.getElementById("filtroEstatus").value;
+            document.querySelectorAll("#tablaTareas tbody tr").forEach(fila => {
+                fila.classList.toggle("hidden", filtro !== "Todos" && fila.dataset.estatus !== filtro);
+            });
+        }
+    </script>
+</body>
+
+</html>

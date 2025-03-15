@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Fase I</title>
+    </head>
+
+    <body>
+        <h1>Iniciar Sesión</h1>
+        <hr>
+        <input id="usernameInput" type="text" placeholder="Usuario"><br><br>
+        <input id="passwordInput" type="password" placeholder="Contraseña"><br><br>
+        <button onclick="validarIngreso()">Ingresar</button>
+        <hr>
+        <p id="mensajeLogin"></p>
+        
+    </body>
+    <script>
+        function validarIngreso() {
+            let usuario = document.getElementById("usernameInput").value;
+            let contrasena = document.getElementById("passwordInput").value;
+            let mensaje = document.getElementById("mensajeLogin");
+
+            if ((usuario === "Admin" && contrasena === "Password") || (usuario === "Willi" && contrasena === "pass123")) {
+                sessionStorage.setItem("usuario", usuario);
+                window.location.href = "inicio.html";
+            } else {
+                mensaje.textContent = "Usuario o contraseña incorrectos. Por favor valida la información.";
+                mensaje.style.color = "red";
+            }
+        }
+    </script>
+</html>
